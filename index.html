@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scott's Vinyl Collection</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Scott's Vinyl Collection</h1>
+            <div class="filter-section">
+                <label for="folderFilter">Filter by Folder:</label>
+                <select id="folderFilter">
+                    <option value="all">All Records</option>
+                </select>
+                <span class="record-count" id="recordCount"></span>
+            </div>
+        </header>
+
+        <main class="three-pane-layout">
+            <!-- Left Pane: Artists -->
+            <aside class="artist-pane">
+                <h2>Artists</h2>
+                <div class="search-box">
+                    <input type="text" id="artistSearch" placeholder="Search artists...">
+                </div>
+                <ul id="artistList" class="artist-list">
+                    <!-- Artists will be populated here -->
+                </ul>
+            </aside>
+
+            <!-- Middle Pane: Albums -->
+            <section class="album-pane">
+                <h2>Albums</h2>
+                <div id="albumList" class="album-list">
+                    <div class="empty-state">
+                        <p>Select an artist to view their albums</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Pane: Album Details -->
+            <section class="details-pane">
+                <div id="albumDetails" class="album-details">
+                    <div class="empty-state">
+                        <p>Select an album to view details</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
