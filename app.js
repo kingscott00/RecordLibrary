@@ -256,8 +256,8 @@ class VinylCollectionApp {
         // Show loading state
         detailsPane.innerHTML = '<div class="empty-state loading"><p>Loading album details...</p></div>';
 
-        // Fetch Wikipedia data
-        const wikiData = await this.fetchWikipediaData(album.Artist, album.Title);
+        // Fetch album data (Discogs + Wikipedia)
+        const albumData = await this.fetchAlbumData(album);
 
         const condition = this.getConditionClass(album['Collection Media Condition']);
         const sleeveCondition = this.getConditionClass(album['Collection Sleeve Condition']);
@@ -271,17 +271,24 @@ class VinylCollectionApp {
             <div class="album-cover-section">
         `;
 
-        if (wikiData.imageUrl) {
-            html += `<img src="${wikiData.imageUrl}" alt="${this.escapeHtml(album.Title)}" class="album-cover">`;
+        if (albumData.imageUrl) {
+            html += `<img src="${albumData.imageUrl}" alt="${this.escapeHtml(album.Title)}" class="album-cover" onerror="this.parentElement.innerHTML='<div class=\\'cover-loading\\'>Album cover not available</div>'">`;
         } else {
-            html += `<div class="cover-loading">No cover image found</div>`;
+            html += `<div class="cover-loading">Album cover not available</div>`;
         }
 
-        if (wikiData.pageUrl) {
-            html += `<br><a href="${wikiData.pageUrl}" target="_blank" class="wikipedia-link">View on Wikipedia</a>`;
+        // Add external links
+        html += `<div style="margin-top: 1rem;">`;
+
+        if (albumData.wikiPageUrl) {
+            html += `<a href="${albumData.wikiPageUrl}" target="_blank" class="wikipedia-link" style="margin-right: 1rem;">View on Wikipedia</a>`;
         }
 
-        html += `</div>`;
+        if (album.release_id) {
+            html += `<a href="https://www.discogs.com/release/${album.release_id}" target="_blank" class="wikipedia-link">View on Discogs</a>`;
+        }
+
+        html += `</div></div>`;
 
         // Album Information
         html += `
@@ -351,73 +358,105 @@ class VinylCollectionApp {
             </div>
         `;
 
-        // Discogs Link
-        if (album.release_id) {
-            html += `
-                <div class="details-section">
-                    <h3>External Links</h3>
-                    <div class="detail-row">
-                        <span class="detail-label">Discogs:</span>
-                        <span class="detail-value">
-                            <a href="https://www.discogs.com/release/${album.release_id}"
-                               target="_blank"
-                               style="color: var(--accent-warm);">
-                                View on Discogs
-                            </a>
-                        </span>
-                    </div>
-                </div>
-            `;
-        }
-
         detailsPane.innerHTML = html;
     }
 
-    async fetchWikipediaData(artist, album) {
-        try {
-            // Search for the album page
-            const searchQuery = `${artist} ${album} album`;
-            const searchUrl = `https://en.wikipedia.org/w/api.php?` +
-                `action=query&` +
-                `list=search&` +
-                `srsearch=${encodeURIComponent(searchQuery)}&` +
-                `format=json&` +
-                `origin=*`;
+    async fetchAlbumData(album) {
+        let result = {
+            imageUrl: null,
+            wikiPageUrl: null
+        };
 
-            const searchResponse = await fetch(searchUrl);
-            const searchData = await searchResponse.json();
+        // First, try to get data from Discogs API using release_id
+        if (album.release_id) {
+            try {
+                const discogsUrl = `https://api.discogs.com/releases/${album.release_id}`;
+                const response = await fetch(discogsUrl, {
+                    headers: {
+                        'User-Agent': 'VinylCollectionApp/1.0'
+                    }
+                });
 
-            if (searchData.query.search.length === 0) {
-                return { imageUrl: null, pageUrl: null };
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Get the primary image (cover)
+                    if (data.images && data.images.length > 0) {
+                        // Find primary image or use first one
+                        const primaryImage = data.images.find(img => img.type === 'primary') || data.images[0];
+                        result.imageUrl = primaryImage.uri;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching Discogs data:', error);
             }
-
-            const pageTitle = searchData.query.search[0].title;
-            const pageUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
-
-            // Get page images
-            const imageUrl = `https://en.wikipedia.org/w/api.php?` +
-                `action=query&` +
-                `titles=${encodeURIComponent(pageTitle)}&` +
-                `prop=pageimages&` +
-                `pithumbsize=500&` +
-                `format=json&` +
-                `origin=*`;
-
-            const imageResponse = await fetch(imageUrl);
-            const imageData = await imageResponse.json();
-
-            const pages = imageData.query.pages;
-            const pageId = Object.keys(pages)[0];
-            const thumbnail = pages[pageId].thumbnail;
-
-            return {
-                imageUrl: thumbnail ? thumbnail.source : null,
-                pageUrl: pageUrl
-            };
-        } catch (error) {
-            console.error('Error fetching Wikipedia data:', error);
-            return { imageUrl: null, pageUrl: null };
         }
+
+        // If no image from Discogs, try Wikipedia as fallback
+        if (!result.imageUrl) {
+            try {
+                const searchQuery = `${album.Artist} ${album.Title} album`;
+                const searchUrl = `https://en.wikipedia.org/w/api.php?` +
+                    `action=query&` +
+                    `list=search&` +
+                    `srsearch=${encodeURIComponent(searchQuery)}&` +
+                    `format=json&` +
+                    `origin=*`;
+
+                const searchResponse = await fetch(searchUrl);
+                const searchData = await searchResponse.json();
+
+                if (searchData.query.search.length > 0) {
+                    const pageTitle = searchData.query.search[0].title;
+                    result.wikiPageUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
+
+                    // Get page images
+                    const imageUrl = `https://en.wikipedia.org/w/api.php?` +
+                        `action=query&` +
+                        `titles=${encodeURIComponent(pageTitle)}&` +
+                        `prop=pageimages&` +
+                        `pithumbsize=500&` +
+                        `format=json&` +
+                        `origin=*`;
+
+                    const imageResponse = await fetch(imageUrl);
+                    const imageData = await imageResponse.json();
+
+                    const pages = imageData.query.pages;
+                    const pageId = Object.keys(pages)[0];
+                    const thumbnail = pages[pageId].thumbnail;
+
+                    if (thumbnail) {
+                        result.imageUrl = thumbnail.source;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching Wikipedia data:', error);
+            }
+        } else {
+            // Still get Wikipedia link even if we have Discogs image
+            try {
+                const searchQuery = `${album.Artist} ${album.Title} album`;
+                const searchUrl = `https://en.wikipedia.org/w/api.php?` +
+                    `action=query&` +
+                    `list=search&` +
+                    `srsearch=${encodeURIComponent(searchQuery)}&` +
+                    `format=json&` +
+                    `origin=*`;
+
+                const searchResponse = await fetch(searchUrl);
+                const searchData = await searchResponse.json();
+
+                if (searchData.query.search.length > 0) {
+                    const pageTitle = searchData.query.search[0].title;
+                    result.wikiPageUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
+                }
+            } catch (error) {
+                console.error('Error fetching Wikipedia link:', error);
+            }
+        }
+
+        return result;
     }
 
     getConditionClass(condition) {
