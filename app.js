@@ -111,21 +111,26 @@ class VinylCollectionApp {
 
     // Mobile navigation helper
     navigateToPane(pane) {
+        const artistPane = document.querySelector('.artist-pane');
         const albumPane = document.querySelector('.album-pane');
         const detailsPane = document.querySelector('.details-pane');
 
+        // Remove active class from all panes first
+        artistPane.classList.remove('active');
+        albumPane.classList.remove('active');
+        detailsPane.classList.remove('active');
+
         if (pane === 'artists') {
-            // Go back to artists view
-            albumPane.classList.remove('active');
-            detailsPane.classList.remove('active');
+            // Show artists view (artist pane visible by default when no active classes)
+            // No active classes needed - artist pane shows by default
         } else if (pane === 'albums') {
-            // Go back to albums view
-            detailsPane.classList.remove('active');
-            albumPane.classList.add('active');
+            // Show albums view - hide artist pane, show album pane
+            artistPane.classList.add('active'); // This hides the artist pane
+            albumPane.classList.add('active'); // This shows the album pane
         } else if (pane === 'details') {
-            // Go to details view
-            albumPane.classList.add('active');
-            detailsPane.classList.add('active');
+            // Show details view - hide other panes, show details pane
+            artistPane.classList.add('active'); // This hides the artist pane
+            detailsPane.classList.add('active'); // This shows the details pane
         }
     }
 
@@ -226,7 +231,12 @@ class VinylCollectionApp {
         document.querySelectorAll('.artist-item').forEach(item => {
             item.classList.remove('active');
         });
-        event.target.closest('.artist-item').classList.add('active');
+
+        // Find the clicked artist item (event.target might be the span inside)
+        const clickedItem = event.currentTarget || event.target.closest('.artist-item');
+        if (clickedItem) {
+            clickedItem.classList.add('active');
+        }
 
         this.renderAlbums(albums);
         this.renderAlbumDetails(null);

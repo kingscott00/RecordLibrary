@@ -514,12 +514,23 @@ header h1 {
     }
 
     /* Show/hide panes on mobile */
+    /* By default, show artist pane, hide others */
     .artist-pane {
         z-index: 3;
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* When artist pane loses focus (other panes become active) */
+    .artist-pane.active {
+        transform: translateX(-100%);
+        opacity: 0;
+        pointer-events: none;
     }
 
     .album-pane {
-        z-index: 2;
+        z-index: 4;
         transform: translateX(100%);
         opacity: 0;
         pointer-events: none;
@@ -532,7 +543,7 @@ header h1 {
     }
 
     .details-pane {
-        z-index: 1;
+        z-index: 5;
         transform: translateX(100%);
         opacity: 0;
         pointer-events: none;
