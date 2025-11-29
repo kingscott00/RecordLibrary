@@ -210,15 +210,15 @@ class VinylCollectionApp {
                 <span class="artist-count">(${albums.length})</span>
             `;
 
-            li.addEventListener('click', () => {
-                this.selectArtist(artist, albums);
+            li.addEventListener('click', (e) => {
+                this.selectArtist(artist, albums, e);
             });
 
             artistList.appendChild(li);
         });
     }
 
-    selectArtist(artist, albums) {
+    selectArtist(artist, albums, event) {
         this.selectedArtist = artist;
         this.selectedAlbum = null;
 
