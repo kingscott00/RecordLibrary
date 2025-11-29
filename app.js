@@ -98,6 +98,35 @@ class VinylCollectionApp {
         document.getElementById('artistSearch').addEventListener('input', (e) => {
             this.filterArtists(e.target.value);
         });
+
+        // Mobile navigation - Back buttons
+        document.getElementById('backToAlbums').addEventListener('click', () => {
+            this.navigateToPane('artists');
+        });
+
+        document.getElementById('backToDetails').addEventListener('click', () => {
+            this.navigateToPane('albums');
+        });
+    }
+
+    // Mobile navigation helper
+    navigateToPane(pane) {
+        const albumPane = document.querySelector('.album-pane');
+        const detailsPane = document.querySelector('.details-pane');
+
+        if (pane === 'artists') {
+            // Go back to artists view
+            albumPane.classList.remove('active');
+            detailsPane.classList.remove('active');
+        } else if (pane === 'albums') {
+            // Go back to albums view
+            detailsPane.classList.remove('active');
+            albumPane.classList.add('active');
+        } else if (pane === 'details') {
+            // Go to details view
+            albumPane.classList.add('active');
+            detailsPane.classList.add('active');
+        }
     }
 
     populateFolderFilter() {
@@ -127,6 +156,9 @@ class VinylCollectionApp {
         this.renderAlbums([]);
         this.renderAlbumDetails(null);
         this.updateRecordCount();
+
+        // Mobile: Reset to artists view
+        this.navigateToPane('artists');
     }
 
     filterArtists(searchTerm) {
@@ -198,6 +230,9 @@ class VinylCollectionApp {
 
         this.renderAlbums(albums);
         this.renderAlbumDetails(null);
+
+        // Mobile: Navigate to albums pane
+        this.navigateToPane('albums');
     }
 
     renderAlbums(albums) {
@@ -243,6 +278,9 @@ class VinylCollectionApp {
         cardElement.classList.add('active');
 
         this.renderAlbumDetails(album);
+
+        // Mobile: Navigate to details pane
+        this.navigateToPane('details');
     }
 
     async renderAlbumDetails(album) {

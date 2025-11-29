@@ -21,8 +21,13 @@
 
         <main class="three-pane-layout">
             <!-- Left Pane: Artists -->
-            <aside class="artist-pane">
-                <h2>Artists</h2>
+            <aside class="artist-pane" data-pane="artists">
+                <div class="pane-header">
+                    <button class="back-button" id="backToArtists" style="display: none;">
+                        ← Back
+                    </button>
+                    <h2>Artists</h2>
+                </div>
                 <div class="search-box">
                     <input type="text" id="artistSearch" placeholder="Search artists...">
                 </div>
@@ -32,8 +37,13 @@
             </aside>
 
             <!-- Middle Pane: Albums -->
-            <section class="album-pane">
-                <h2>Albums</h2>
+            <section class="album-pane" data-pane="albums">
+                <div class="pane-header">
+                    <button class="back-button" id="backToAlbums">
+                        ← Back to Artists
+                    </button>
+                    <h2>Albums</h2>
+                </div>
                 <div id="albumList" class="album-list">
                     <div class="empty-state">
                         <p>Select an artist to view their albums</p>
@@ -42,7 +52,12 @@
             </section>
 
             <!-- Right Pane: Album Details -->
-            <section class="details-pane">
+            <section class="details-pane" data-pane="details">
+                <div class="pane-header">
+                    <button class="back-button" id="backToDetails">
+                        ← Back to Albums
+                    </button>
+                </div>
                 <div id="albumDetails" class="album-details">
                     <div class="empty-state">
                         <p>Select an album to view details</p>
